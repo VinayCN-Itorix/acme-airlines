@@ -1,5 +1,6 @@
 package com.airlines.controller;
 
+import com.airlines.models.TicketRefund.ProcessResponse;
 import com.airlines.models.TicketRefund.RefundRequest;
 import com.airlines.models.TicketRefund.RefundResponse;
 import io.apiwiz.compliance.config.EnableCompliance;
@@ -83,13 +84,13 @@ public ResponseEntity<?> validateRefund(@RequestHeader(value = "enableTracing", 
             HttpEntity<RefundRequest> requestEntity = new HttpEntity<>(refundRequest, headers);
             RefundResponse processResponse = restTemplate.exchange(processUri, HttpMethod.POST, requestEntity, RefundResponse.class).getBody();
 
-            HttpHeaders headers1 = new HttpHeaders();
-            headers.add("enableTracing", String.valueOf(enableTracing));
-            headers.add("deviateResponse", String.valueOf(deviateResponse));
-
-            URI updateUri = new URI(updateSystem);
-            HttpEntity<RefundResponse> requestEntitye = new HttpEntity<>(refundResponse, headers);
-            RefundResponse updateResponse = restTemplate.exchange(updateUri, HttpMethod.PUT, requestEntity, RefundResponse.class).getBody();
+//            HttpHeaders headers1 = new HttpHeaders();
+//            headers.add("enableTracing", String.valueOf(enableTracing));
+//            headers.add("deviateResponse", String.valueOf(deviateResponse));
+//
+//            URI updateUri = new URI(updateSystem);
+//            HttpEntity<RefundResponse> requestEntitye = new HttpEntity<>(refundResponse, headers);
+//            RefundResponse updateResponse = restTemplate.exchange(updateUri, HttpMethod.PUT, requestEntity, RefundResponse.class).getBody();
 
             return new ResponseEntity<>(refundResponse, HttpStatus.OK);
         }
@@ -99,7 +100,7 @@ public ResponseEntity<?> validateRefund(@RequestHeader(value = "enableTracing", 
     // Logic for invalid refund scenario
     refundResponse.setEligible(false);
     refundResponse.setMessage("Refund is Rejected"); // Unique message per request
-    refundResponse.setRefundId("refundId_" + UUID.randomUUID().toString()); // Unique refund ID
+    refundResponse.setRefundId(String.valueOf(UUID.randomUUID())); // Unique refund ID
     refundResponse.setRefundProcessed(false); // Not processed for invalid
 
     // If enableTracing is true, proceed to cancel the refund
@@ -113,7 +114,7 @@ public ResponseEntity<?> validateRefund(@RequestHeader(value = "enableTracing", 
         RefundResponse cancelResponse = restTemplate.exchange(cancelUri, HttpMethod.POST, requestEntity, RefundResponse.class).getBody();
 
         // Return cancelResponse or the refundResponse with error information
-        return new ResponseEntity<>(cancelResponse != null ? cancelResponse : refundResponse, HttpStatus.OK);
+        return new ResponseEntity<>(refundResponse, HttpStatus.OK);
     }
 
     // Return the populated response when tracing is not enabled
@@ -125,6 +126,10 @@ public ResponseEntity<?> validateRefund(@RequestHeader(value = "enableTracing", 
 public ResponseEntity<?> processRefund(@RequestHeader(value = "enableTracing", required = false) boolean enableTracing,
                                        @RequestHeader(value = "deviateResponse", required = false) boolean deviateResponse,
                                        @RequestBody RefundResponse refundResponse) throws URISyntaxException {
+    ProcessResponse processResponse = new ProcessResponse();
+    processResponse.setRefundId(refundResponse.getRefundId());
+    processResponse.setStatus(true);
+    processResponse.setPaymentId(String.valueOf(UUID.randomUUID()));
     if (enableTracing) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("enableTracing", String.valueOf(enableTracing));
@@ -137,7 +142,7 @@ public ResponseEntity<?> processRefund(@RequestHeader(value = "enableTracing", r
         return new ResponseEntity<>(confirmResponse, HttpStatus.OK);
     }
 
-    return new ResponseEntity<>(refundResponse, HttpStatus.OK);
+    return new ResponseEntity<>(processResponse, HttpStatus.OK);
 }
 
 // Step 4: Confirm Refund

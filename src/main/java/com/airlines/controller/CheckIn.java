@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @RestController
 @EnableCompliance
-//@RequestMapping("/v2/check-in")
+@RequestMapping("/v2/check-in")
 public class CheckIn {
 
 // Define API paths

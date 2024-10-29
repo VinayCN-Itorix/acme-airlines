@@ -9,4 +9,5 @@ private String seatNumber; // From SeatChange
 private String baggageId; // From BaggageId
 private String mealOption; // From MealOptions
 private String boardingId;
+private boolean success;
 }
